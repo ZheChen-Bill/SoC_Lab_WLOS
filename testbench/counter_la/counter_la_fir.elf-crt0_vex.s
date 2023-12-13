@@ -1,5 +1,5 @@
 # 0 "../../firmware/crt0_vex.S"
-# 1 "/home/ubuntu/SoC_Design/caravel-soc_fpga-lab/lab-wlos_baseline/testbench/counter_la//"
+# 1 "/home/ubuntu/SoC_Design/lab-wlos_baseline/testbench/counter_la//"
 # 0 "<built-in>"
 # 0 "<command-line>"
 # 1 "../../firmware/crt0_vex.S"

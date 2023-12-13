@@ -6,7 +6,7 @@
 	.text
 .Ltext0:
 	.cfi_sections	.debug_frame
-	.file 0 "/home/ubuntu/SoC_Design/caravel-soc_fpga-lab/lab-wlos_baseline/testbench/counter_la" "counter_la_fir.c"
+	.file 0 "/home/ubuntu/SoC_Design/lab-wlos_baseline/testbench/counter_la" "counter_la_fir.c"
 	.align	2
 	.type	flush_cpu_icache, @function
 flush_cpu_icache:
@@ -1305,5 +1305,5 @@ main:
 .LASF0:
 	.string	"counter_la_fir.c"
 .LASF1:
-	.string	"/home/ubuntu/SoC_Design/caravel-soc_fpga-lab/lab-wlos_baseline/testbench/counter_la"
+	.string	"/home/ubuntu/SoC_Design/lab-wlos_baseline/testbench/counter_la"
 	.ident	"GCC: (g1ea978e3066) 12.1.0"

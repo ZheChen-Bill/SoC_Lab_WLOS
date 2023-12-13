@@ -6,7 +6,7 @@
 	.text
 .Ltext0:
 	.cfi_sections	.debug_frame
-	.file 0 "/home/ubuntu/SoC_Design/caravel-soc_fpga-lab/lab-wlos_baseline/testbench/counter_la" "matmul.c"
+	.file 0 "/home/ubuntu/SoC_Design/lab-wlos_baseline/testbench/counter_la" "matmul.c"
 	.globl	A
 	.data
 	.align	2
@@ -530,8 +530,8 @@ matmul:
 .LASF5:
 	.string	"GNU C17 12.1.0 -mabi=ilp32 -mtune=rocket -misa-spec=2.2 -march=rv32i -g -ffreestanding"
 	.section	.debug_line_str,"MS",@progbits,1
+.LASF1:
+	.string	"/home/ubuntu/SoC_Design/lab-wlos_baseline/testbench/counter_la"
 .LASF0:
 	.string	"matmul.c"
-.LASF1:
-	.string	"/home/ubuntu/SoC_Design/caravel-soc_fpga-lab/lab-wlos_baseline/testbench/counter_la"
 	.ident	"GCC: (g1ea978e3066) 12.1.0"

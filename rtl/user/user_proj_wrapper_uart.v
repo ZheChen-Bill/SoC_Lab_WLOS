@@ -30,7 +30,8 @@
  */
 
 module user_project_wrapper #(
-    parameter BITS = 32
+    parameter BITS = 32,
+    parameter DELAYS=10
 ) (
 `ifdef USE_POWER_PINS
     inout vdda1,	// User area 1 3.3V supply
@@ -110,6 +111,144 @@ module user_project_wrapper #(
 /*--------------------------------------*/
 /* User project is instantiated  here   */
 /*--------------------------------------*/
+
+// wrie to ram
+
+reg wbs_stb_i_ram;
+reg wbs_cyc_i_ram;
+reg wbs_we_i_ram;
+reg [3:0] wbs_sel_i_ram;
+reg [31:0] wbs_dat_i_ram;
+reg [31:0] wbs_adr_i_ram;
+wire wbs_ack_o_ram;
+wire [31:0] wbs_dat_o_ram;
+//reg to uart
+
+reg wbs_stb_i_uart;
+reg wbs_cyc_i_uart;
+reg wbs_we_i_uart;
+reg [3:0] wbs_sel_i_uart;
+reg [31:0] wbs_dat_i_uart;
+reg [31:0] wbs_adr_i_uart;
+wire wbs_ack_o_uart;
+wire [31:0] wbs_dat_o_uart;
+// reg for test
+wire [31:0]wbs_adr_i_test;
+wire [31:0]wbs_dat_i_test;
+
+reg  ready;
+reg  [BITS-17:0] delayed_count;
+
+
+wire [1:0] decode; // 00null, 01:uart  10:bram 11:sofrware debugger  
+
+assign decode = (wbs_adr_i >= 32'h30000000 && wbs_adr_i <= 32'h3000000c)? 2'b01 :
+                (wbs_adr_i >= 32'h38000000)? 2'b10 : 
+                (wbs_adr_i == 32'h30000090)? 2'b11: 2'b00;
+
+assign wbs_dat_o = (decode == 2'b01)? wbs_dat_o_uart : 
+                   (decode == 2'b10)? wbs_dat_o_ram: 
+                   (decode == 2'b11)? 32'h94876487:
+                   32'd0;
+
+assign wbs_ack_o = (decode == 2'b01)? wbs_ack_o_uart : 
+                   (decode == 2'b10)? wbs_ack_o_ram: 
+                   (decode == 2'b11)? 1'b1 :1'd0;                 
+
+assign wbs_adr_i_test = (decode == 2'b11)? wbs_adr_i:32'd0;
+assign wbs_dat_i_test = (decode == 2'b11)? wbs_dat_i:32'd0;
+assign wbs_ack_o_ram = ready;
+
+always@*
+    case(decode)
+        2'b01:begin
+            wbs_stb_i_uart = wbs_stb_i;
+            wbs_cyc_i_uart = wbs_cyc_i;
+            wbs_we_i_uart = wbs_we_i;
+            wbs_sel_i_uart = wbs_sel_i;
+            wbs_dat_i_uart = wbs_dat_i;
+            wbs_adr_i_uart = wbs_adr_i;
+        end
+        2'b10:begin
+            wbs_stb_i_uart = 1'd0;
+            wbs_cyc_i_uart = 1'd0;
+            wbs_we_i_uart = 1'd0;
+            wbs_sel_i_uart = 1'd0;
+            wbs_dat_i_uart = 32'd0;
+            wbs_adr_i_uart = 32'd0;
+        end
+        default: begin
+            wbs_stb_i_uart = 1'd0;
+            wbs_cyc_i_uart = 1'd0;
+            wbs_we_i_uart = 1'd0;
+            wbs_sel_i_uart = 1'd0;
+            wbs_dat_i_uart = 32'd0;
+            wbs_adr_i_uart = 32'd0;
+        end
+
+    endcase
+
+always@*
+    case(decode)
+        2'b10:begin
+            wbs_stb_i_ram = wbs_stb_i;
+            wbs_cyc_i_ram = wbs_cyc_i;
+            wbs_we_i_ram = wbs_we_i;
+            wbs_sel_i_ram = wbs_sel_i;
+            wbs_dat_i_ram = wbs_dat_i;
+            wbs_adr_i_ram = wbs_adr_i;
+        end
+        2'b01:begin
+            wbs_stb_i_ram = 1'd0;
+            wbs_cyc_i_ram = 1'd0;
+            wbs_we_i_ram = 1'd0;
+            wbs_sel_i_ram = 1'd0;
+            wbs_dat_i_ram = 32'd0;
+            wbs_adr_i_ram = 32'd0;
+        end
+        default: begin
+            wbs_stb_i_ram = 1'd0;
+            wbs_cyc_i_ram = 1'd0;
+            wbs_we_i_ram = 1'd0;
+            wbs_sel_i_ram = 1'd0;
+            wbs_dat_i_ram = 32'd0;
+            wbs_adr_i_ram = 32'd0;
+        end
+
+    endcase
+
+assign valid = wbs_cyc_i_ram && wbs_stb_i_ram ; 
+assign wstrb = wbs_sel_i_ram & {4{wbs_we_i_ram}};
+
+always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+        ready <= 1'b0;
+        delayed_count <= 16'b0;
+    end else begin
+        ready <= 1'b0;
+        if ( valid && !ready ) begin
+            if ( delayed_count == DELAYS ) begin
+                delayed_count <= 16'b0;
+                ready <= 1'b1;
+            end else begin
+                delayed_count <= delayed_count + 1;
+            end
+        end
+    end
+end
+
+
+bram user_bram (
+        .CLK(wb_clk_i),
+        .WE0({4{wstrb}}),
+        .EN0(valid),
+        .Di0(wbs_dat_i_ram),
+        .Do0(wbs_dat_o_ram),
+        .A0(wbs_adr_i_ram)
+    );
+
+
+
 uart uart (
 `ifdef USE_POWER_PINS
 	.vccd1(vccd1),	// User area 1 1.8V power
@@ -120,16 +259,15 @@ uart uart (
 
     // MGMT SoC Wishbone Slave
 
-    .wbs_stb_i(wbs_stb_i),
-    .wbs_cyc_i(wbs_cyc_i),
-    .wbs_we_i(wbs_we_i),
-    .wbs_sel_i(wbs_sel_i),
-    .wbs_dat_i(wbs_dat_i),
-    .wbs_adr_i(wbs_adr_i),
-    //.wbs_ack_o(wbs_ack_o),
-    //.wbs_dat_o(wbs_dat_o),
-    .wbs_ack_o(wbs_ack_o_uart),  //   both input    //
-    .wbs_dat_o(wbs_dat_o_uart),  //   from uart     //             
+    .wbs_stb_i(wbs_stb_i_uart),
+    .wbs_cyc_i(wbs_cyc_i_uart),
+    .wbs_we_i(wbs_we_i_uart),
+    .wbs_sel_i(wbs_sel_i_uart),
+    .wbs_dat_i(wbs_dat_i_uart),
+    .wbs_adr_i(wbs_adr_i_uart),
+    .wbs_ack_o(wbs_ack_o_uart),
+    .wbs_dat_o(wbs_dat_o_uart),
+
 
     // IO ports
     .io_in  (io_in),

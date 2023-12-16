@@ -20,7 +20,7 @@ Linker script and memory map
 
                 0x0000000000000000                __DYNAMIC = 0x0
 
-.text           0x0000000010000000      0xa6c
+.text           0x0000000010000000      0xa70
                 0x0000000010000000                _ftext = .
  *crt0*(.text)
  .text          0x0000000010000000      0x148 uart.elf-crt0_vex.o
@@ -32,27 +32,27 @@ Linker script and memory map
  .text          0x0000000010000148      0x15c uart.elf-isr.o
                 0x0000000010000238                isr
  .text          0x00000000100002a4       0x38 uart.elf-uart.o
- .text          0x00000000100002dc      0x790 uart.elf-counter_la_uart.o
+ .text          0x00000000100002dc      0x794 uart.elf-counter_la_uart.o
                 0x00000000100003cc                main
 
-.mprj           0x0000000010000a6c      0x1ec
- .mprj          0x0000000010000a6c      0x1ec uart.elf-uart.o
-                0x0000000010000a6c                uart_write
-                0x0000000010000ab4                uart_write_char
-                0x0000000010000b1c                uart_write_string
-                0x0000000010000b70                uart_read_char
-                0x0000000010000be4                uart_read
+.mprj           0x0000000010000a70      0x1ec
+ .mprj          0x0000000010000a70      0x1ec uart.elf-uart.o
+                0x0000000010000a70                uart_write
+                0x0000000010000ab8                uart_write_char
+                0x0000000010000b20                uart_write_string
+                0x0000000010000b74                uart_read_char
+                0x0000000010000be8                uart_read
 
-.rodata         0x0000000010000c58        0x0
-                0x0000000010000c58                . = ALIGN (0x8)
- *fill*         0x0000000010000c58        0x0 
-                0x0000000010000c58                _frodata = .
+.rodata         0x0000000010000c5c        0x4
+                0x0000000010000c60                . = ALIGN (0x8)
+ *fill*         0x0000000010000c5c        0x4 
+                0x0000000010000c60                _frodata = .
  *(.rodata .rodata.* .gnu.linkonce.r.*)
  *(.rodata1)
-                0x0000000010000c58                . = ALIGN (0x8)
-                0x0000000010000c58                _erodata = .
+                0x0000000010000c60                . = ALIGN (0x8)
+                0x0000000010000c60                _erodata = .
 
-.data           0x0000000000000000      0x108 load address 0x0000000010000c58
+.data           0x0000000000000000      0x108 load address 0x0000000010000c60
                 0x0000000000000000                . = ALIGN (0x8)
                 0x0000000000000000                _fdata = .
  *(.data .data.* .gnu.linkonce.d.*)
@@ -75,7 +75,7 @@ Linker script and memory map
  *fill*         0x0000000000000104        0x4 
                 0x0000000000000108                _edata = .
 
-.bss            0x0000000000000108       0x98 load address 0x0000000010000d60
+.bss            0x0000000000000108       0x98 load address 0x0000000010000d68
                 0x0000000000000108                . = ALIGN (0x8)
                 0x0000000000000108                _fbss = .
  *(.dynsbss)
@@ -96,7 +96,7 @@ Linker script and memory map
                 0x00000000000001a0                _ebss = .
                 0x00000000000001a0                _end = .
 
-.mprjram        0x0000000038000000      0x53c load address 0x0000000010000d60
+.mprjram        0x0000000038000000      0x53c load address 0x0000000010000d68
                 0x0000000038000000                . = ALIGN (0x8)
                 0x0000000038000000                _fsram = .
  *libgcc.a:*(.text .text.*)
@@ -111,10 +111,10 @@ Linker script and memory map
                 0x0000000038000498                sort
                 0x0000000038000508                qsort
                 0x0000000000000600                PROVIDE (_fstack = (ORIGIN (dff2) + LENGTH (dff2)))
-                0x0000000010000c58                PROVIDE (_fdata_rom = LOADADDR (.data))
+                0x0000000010000c60                PROVIDE (_fdata_rom = LOADADDR (.data))
                 [!provide]                        PROVIDE (_edata_rom = (LOADADDR (.data) + SIZEOF (.data)))
                 0x000000003800053c                PROVIDE (_esram = (ORIGIN (mprjram) + SIZEOF (.mprjram)))
-                0x0000000010000d60                PROVIDE (_esram_rom = LOADADDR (.mprjram))
+                0x0000000010000d68                PROVIDE (_esram_rom = LOADADDR (.mprjram))
 LOAD uart.elf-crt0_vex.o
 LOAD uart.elf-isr.o
 LOAD uart.elf-uart.o
@@ -127,7 +127,7 @@ END GROUP
 LOAD /opt/riscv/lib/gcc/riscv32-unknown-elf/12.1.0/libgcc.a
 OUTPUT(uart.elf elf32-littleriscv)
 
-.rela.dyn       0x000000003800053c        0x0 load address 0x000000001000129c
+.rela.dyn       0x000000003800053c        0x0 load address 0x00000000100012a4
  .rela.text     0x000000003800053c        0x0 uart.elf-crt0_vex.o
 
 .riscv.attributes
@@ -149,12 +149,12 @@ OUTPUT(uart.elf elf32-littleriscv)
  .comment       0x000000000000001b       0x1c uart.elf-uart.o
  .comment       0x000000000000001b       0x1c uart.elf-counter_la_uart.o
 
-.debug_line     0x0000000000000000     0x1241
+.debug_line     0x0000000000000000     0x1251
  .debug_line    0x0000000000000000      0x20a uart.elf-crt0_vex.o
  .debug_line    0x000000000000020a      0x151 uart.elf-isr.o
  .debug_line    0x000000000000035b      0x637 uart.elf-uart.o
- .debug_line    0x0000000000000992      0x835 uart.elf-counter_la_uart.o
- .debug_line    0x00000000000011c7       0x7a /opt/riscv/lib/gcc/riscv32-unknown-elf/12.1.0/libgcc.a(muldi3.o)
+ .debug_line    0x0000000000000992      0x845 uart.elf-counter_la_uart.o
+ .debug_line    0x00000000000011d7       0x7a /opt/riscv/lib/gcc/riscv32-unknown-elf/12.1.0/libgcc.a(muldi3.o)
 
 .debug_line_str
                 0x0000000000000000      0x194

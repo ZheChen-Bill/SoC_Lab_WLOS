@@ -144,7 +144,7 @@ module uart_tb;
 		$dumpvars(0, uart_tb);
 
 		// Repeat cycles of 1000 clock edges as needed to complete testbench
-		repeat (500) begin
+		repeat (1000) begin
 			repeat (1000) @(posedge clock);
 			// $display("+1000 cycles");
 		end
@@ -179,6 +179,8 @@ module uart_tb;
 	//test FIR
 	initial begin
 
+		wait(checkbits == 16'hAB40);
+		$display("LA Test 1 started");
 		wait(checkbits == 16'h0000);
 		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 		wait(checkbits == 16'hFFF6);
@@ -242,16 +244,15 @@ module uart_tb;
 	end
 
 	initial begin
-		tx_start = 0;
-		wait(checkbits == 16'hAB40);
-		$display("LA Test 1 started");
 
+		wait(checkbits == 16'hAB40);
 		$display("***********");
 		$display("*uart start*");
 		$display("***********");
 		send_data_1;
 		#10000;
 
+		wait(checkbits == 16'h0393);
 		send_data_2;
 		#10000;
 		$display("***********");

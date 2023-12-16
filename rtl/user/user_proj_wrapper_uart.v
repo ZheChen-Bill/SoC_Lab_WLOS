@@ -30,8 +30,8 @@
  */
 
 module user_project_wrapper #(
-    parameter BITS   = 32,
-    parameter DELAYS = 10
+    parameter BITS = 32,
+    parameter DELAYS=10
 ) (
 `ifdef USE_POWER_PINS
     inout vdda1,	// User area 1 3.3V supply
@@ -78,37 +78,148 @@ module user_project_wrapper #(
     // User maskable interrupt signals
     output [2:0] user_irq
 );
-    //user memory
-    wire decode_to_mem;
-    wire wbs_ack_o_mem;
-    wire [31:0] wbs_dat_o_mem;
-    wire [37:0] io_out_mem;
-    wire [37:0] io_oeb_mem;
-    wire [2:0] user_irq_mem;
-
-    //uart
-    wire decode_to_uart;
-    wire wbs_ack_o_uart;
-    wire [31:0] wbs_dat_o_uart;
-    wire [37:0] io_out_uart;
-    wire [37:0] io_oeb_uart;
-    wire [2:0] user_irq_uart;
-
-    
-    assign decode_to_mem = (wbs_adr_i[31:24] == 8'h38) ? 1 : 0;
-    //assign decode_to_uart = (wbs_adr_i[31:24] == 8'h10) ? 1 : 0;
-
-    assign wbs_ack_o = decode_to_mem ? wbs_ack_o_mem : wbs_ack_o_uart;
-    assign wbs_dat_o = decode_to_mem ? wbs_dat_o_mem : wbs_dat_o_uart;
-    assign io_out = decode_to_mem ? io_out_mem : io_out_uart;
-    assign io_oeb = decode_to_mem ? io_oeb_mem : io_oeb_uart;
-
-    assign user_irq = user_irq_uart;
-    
 
 /*--------------------------------------*/
 /* User project is instantiated  here   */
 /*--------------------------------------*/
+
+// wrie to ram
+
+reg wbs_stb_i_ram;
+reg wbs_cyc_i_ram;
+reg wbs_we_i_ram;
+reg [3:0] wbs_sel_i_ram;
+reg [31:0] wbs_dat_i_ram;
+reg [31:0] wbs_adr_i_ram;
+wire wbs_ack_o_ram;
+wire [31:0] wbs_dat_o_ram;
+//reg to uart
+
+reg wbs_stb_i_uart;
+reg wbs_cyc_i_uart;
+reg wbs_we_i_uart;
+reg [3:0] wbs_sel_i_uart;
+reg [31:0] wbs_dat_i_uart;
+reg [31:0] wbs_adr_i_uart;
+wire wbs_ack_o_uart;
+wire [31:0] wbs_dat_o_uart;
+// reg for test
+wire [31:0]wbs_adr_i_test;
+wire [31:0]wbs_dat_i_test;
+
+reg  ready;
+reg  [BITS-17:0] delayed_count;
+
+
+wire [1:0] decode; // 00null, 01:uart  10:bram 11:sofrware debugger  
+
+assign decode = (wbs_adr_i >= 32'h30000000 && wbs_adr_i <= 32'h3000000c)? 2'b01 :
+                (wbs_adr_i >= 32'h38000000)? 2'b10 : 
+                (wbs_adr_i == 32'h30000090)? 2'b11: 2'b00;
+
+assign wbs_dat_o = (decode == 2'b01)? wbs_dat_o_uart : 
+                   (decode == 2'b10)? wbs_dat_o_ram: 
+                   (decode == 2'b11)? 32'h94876487:
+                   32'd0;
+
+assign wbs_ack_o = (decode == 2'b01)? wbs_ack_o_uart : 
+                   (decode == 2'b10)? wbs_ack_o_ram: 
+                   (decode == 2'b11)? 1'b1 :1'd0;                 
+
+assign wbs_adr_i_test = (decode == 2'b11)? wbs_adr_i:32'd0;
+assign wbs_dat_i_test = (decode == 2'b11)? wbs_dat_i:32'd0;
+assign wbs_ack_o_ram = ready;
+
+always@*
+    case(decode)
+        2'b01:begin
+            wbs_stb_i_uart = wbs_stb_i;
+            wbs_cyc_i_uart = wbs_cyc_i;
+            wbs_we_i_uart = wbs_we_i;
+            wbs_sel_i_uart = wbs_sel_i;
+            wbs_dat_i_uart = wbs_dat_i;
+            wbs_adr_i_uart = wbs_adr_i;
+        end
+        2'b10:begin
+            wbs_stb_i_uart = 1'd0;
+            wbs_cyc_i_uart = 1'd0;
+            wbs_we_i_uart = 1'd0;
+            wbs_sel_i_uart = 1'd0;
+            wbs_dat_i_uart = 32'd0;
+            wbs_adr_i_uart = 32'd0;
+        end
+        default: begin
+            wbs_stb_i_uart = 1'd0;
+            wbs_cyc_i_uart = 1'd0;
+            wbs_we_i_uart = 1'd0;
+            wbs_sel_i_uart = 1'd0;
+            wbs_dat_i_uart = 32'd0;
+            wbs_adr_i_uart = 32'd0;
+        end
+
+    endcase
+
+always@*
+    case(decode)
+        2'b10:begin
+            wbs_stb_i_ram = wbs_stb_i;
+            wbs_cyc_i_ram = wbs_cyc_i;
+            wbs_we_i_ram = wbs_we_i;
+            wbs_sel_i_ram = wbs_sel_i;
+            wbs_dat_i_ram = wbs_dat_i;
+            wbs_adr_i_ram = wbs_adr_i;
+        end
+        2'b01:begin
+            wbs_stb_i_ram = 1'd0;
+            wbs_cyc_i_ram = 1'd0;
+            wbs_we_i_ram = 1'd0;
+            wbs_sel_i_ram = 1'd0;
+            wbs_dat_i_ram = 32'd0;
+            wbs_adr_i_ram = 32'd0;
+        end
+        default: begin
+            wbs_stb_i_ram = 1'd0;
+            wbs_cyc_i_ram = 1'd0;
+            wbs_we_i_ram = 1'd0;
+            wbs_sel_i_ram = 1'd0;
+            wbs_dat_i_ram = 32'd0;
+            wbs_adr_i_ram = 32'd0;
+        end
+
+    endcase
+
+assign valid = wbs_cyc_i_ram && wbs_stb_i_ram ; 
+assign wstrb = wbs_sel_i_ram & {4{wbs_we_i_ram}};
+
+always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+        ready <= 1'b0;
+        delayed_count <= 16'b0;
+    end else begin
+        ready <= 1'b0;
+        if ( valid && !ready ) begin
+            if ( delayed_count == DELAYS ) begin
+                delayed_count <= 16'b0;
+                ready <= 1'b1;
+            end else begin
+                delayed_count <= delayed_count + 1;
+            end
+        end
+    end
+end
+
+
+bram user_bram (
+        .CLK(wb_clk_i),
+        .WE0({4{wstrb}}),
+        .EN0(valid),
+        .Di0(wbs_dat_i_ram),
+        .Do0(wbs_dat_o_ram),
+        .A0(wbs_adr_i_ram)
+    );
+
+
+
 uart uart (
 `ifdef USE_POWER_PINS
 	.vccd1(vccd1),	// User area 1 1.8V power
@@ -119,91 +230,24 @@ uart uart (
 
     // MGMT SoC Wishbone Slave
 
-    .wbs_stb_i(wbs_stb_i),
-    .wbs_cyc_i(wbs_cyc_i),
-    .wbs_we_i(wbs_we_i),
-    .wbs_sel_i(wbs_sel_i),
-    .wbs_dat_i(wbs_dat_i),
-    .wbs_adr_i(wbs_adr_i),
-    //.wbs_ack_o(wbs_ack_o),
-    //.wbs_dat_o(wbs_dat_o),
-    .wbs_ack_o(wbs_ack_o_uart),  //   both input    //
-    .wbs_dat_o(wbs_dat_o_uart),  //   from uart     //             
+    .wbs_stb_i(wbs_stb_i_uart),
+    .wbs_cyc_i(wbs_cyc_i_uart),
+    .wbs_we_i(wbs_we_i_uart),
+    .wbs_sel_i(wbs_sel_i_uart),
+    .wbs_dat_i(wbs_dat_i_uart),
+    .wbs_adr_i(wbs_adr_i_uart),
+    .wbs_ack_o(wbs_ack_o_uart),
+    .wbs_dat_o(wbs_dat_o_uart),
 
     // IO ports
-    .io_in  (io_in),
-    //.io_out (io_out),
-    //.io_oeb (io_oeb),
-    .io_out (io_out_uart),
-    .io_oeb (io_oeb_uart),
+    .io_in  (io_in      ),
+    .io_out (io_out     ),
+    .io_oeb (io_oeb     ),
 
     // irq
-    .user_irq (user_irq_uart)
+    .user_irq (user_irq)
 );
 
-
-//user project bram
-    wire clk;
-    wire rst;
-
-    wire [31:0] rdata; 
-    wire [31:0] wdata;
-    reg [BITS-1:0] count;
-
-    wire valid;
-    wire [3:0] wstrb;
-    wire [31:0] la_write;
-
-    reg ready;
-    reg [BITS-17:0] delayed_count;
-
-    // WB MI A
-    assign valid = wbs_cyc_i && wbs_stb_i && decode_to_mem; 
-    assign wstrb = wbs_sel_i & {4{wbs_we_i}};
-    assign wbs_dat_o_mem = rdata;
-    assign wdata = wbs_dat_i;
-    assign wbs_ack_o_mem = ready;
-
-    // IO
-    assign io_out_mem = count;
-    assign io_oeb_mem = {(`MPRJ_IO_PADS-1){rst}};
-
-    // IRQ
-    assign user_irq_mem = 3'b000;	// Unused
-
-    // LA
-    assign la_data_out = {{(127-BITS){1'b0}}, count};
-    // Assuming LA probes [63:32] are for controlling the count register  
-    assign la_write = ~la_oenb[63:32] & ~{BITS{valid}};
-    // Assuming LA probes [65:64] are for controlling the count clk & reset  
-    assign clk = (~la_oenb[64]) ? la_data_in[64]: wb_clk_i;
-    assign rst = (~la_oenb[65]) ? la_data_in[65]: wb_rst_i;
-    
-    always @(posedge clk) begin
-        if (rst) begin
-            ready <= 1'b0;
-            delayed_count <= 16'b0;
-        end else begin
-            ready <= 1'b0;
-            if ( valid && !ready ) begin
-                if ( delayed_count == DELAYS ) begin
-                    delayed_count <= 16'b0;
-                    ready <= 1'b1;
-                end else begin
-                    delayed_count <= delayed_count + 1;
-                end
-            end
-        end
-    end
-    
-    bram user_bram (
-        .CLK(clk),
-        .WE0(wstrb),
-        .EN0(valid),
-        .Di0(wbs_dat_i),
-        .Do0(rdata),
-        .A0(wbs_adr_i)
-    );
 endmodule	// user_project_wrapper
 
 `default_nettype wire

@@ -200,7 +200,7 @@ void main()
 	reg_mprj_datal = *(tmp+9) << 16;	
 
 	while(1){
-		if (reg_mprj_datal == 0x23710000){
+		if (*(tmp+9) << 16 == 0x23710000){
 			break;
 		}
 	}

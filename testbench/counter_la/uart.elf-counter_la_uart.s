@@ -827,10 +827,13 @@ main:
 	.loc 5 200 36
 	sw	a4,0(a5)
 .L12:
-	.loc 5 203 8
-	li	a5,637534208
-	addi	a5,a5,12
-	lw	a4,0(a5)
+	.loc 5 203 12
+	lw	a5,-24(s0)
+	addi	a5,a5,36
+	.loc 5 203 7
+	lw	a5,0(a5)
+	.loc 5 203 16
+	slli	a4,a5,16
 	.loc 5 203 6
 	li	a5,594608128
 	beq	a4,a5,.L14

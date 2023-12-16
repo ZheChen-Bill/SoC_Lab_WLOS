@@ -17,11 +17,24 @@
 
 // This include is relative to $CARAVEL_PATH (see Makefile)
 #include <defs.h>
-#include <stub.c>
+#include <user_uart.h>
+#ifdef USER_PROJ_IRQ0_EN
+#include <irq_vex.h>
+#endif
+
+
+extern void uart_write();
+extern void uart_write_char();
+extern void uart_write_string();
+extern void uart_reset_write_fifo();
+extern int uart_isr();
+extern int uart_read();
 
 extern int* fir();
 extern int* matmul();
 extern int* qsort();
+extern void ckend();
+
 
 // --------------------------------------------------------
 
@@ -35,8 +48,9 @@ extern int* qsort();
 
 void main()
 {
-	int j;
-
+#ifdef USER_PROJ_IRQ0_EN
+    int mask;
+#endif
 	/* Set up the housekeeping SPI to be connected internally so	*/
 	/* that external pin changes don't affect it.			*/
 
@@ -62,46 +76,46 @@ void main()
 	// logic analyzer probes.
 	// I/O 6 is configured for the UART Tx line
 
-        reg_mprj_io_31 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_30 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_29 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_28 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_27 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_26 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_25 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_24 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_23 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_22 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_21 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_20 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_19 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_18 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_17 = GPIO_MODE_MGMT_STD_OUTPUT;
-        reg_mprj_io_16 = GPIO_MODE_MGMT_STD_OUTPUT;
+    //reg_spi_enable = 1;
+    reg_wb_enable = 1;
 
-        reg_mprj_io_15 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_14 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_13 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_12 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_11 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_10 = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_9  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_8  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_7  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_5  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_4  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_3  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_2  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_1  = GPIO_MODE_USER_STD_OUTPUT;
-        reg_mprj_io_0  = GPIO_MODE_USER_STD_OUTPUT;
+    reg_mprj_io_31 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_30 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_29 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_28 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_27 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_26 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_25 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_24 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_23 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_22 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_21 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_20 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_19 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_18 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_17 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_16 = GPIO_MODE_MGMT_STD_OUTPUT;
 
-        reg_mprj_io_6  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_15 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_14 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_13 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_12 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_11 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_10 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_9  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_8  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_7  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_4  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_3  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_2  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_1  = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_0  = GPIO_MODE_MGMT_STD_OUTPUT;
 
-	// Set UART clock to 64 kbaud (enable before I/O configuration)
-	// reg_uart_clkdiv = 625;
-	reg_uart_enable = 1;
-	
-	// Now, apply the configuration
+    reg_mprj_io_6  = GPIO_MODE_USER_STD_OUTPUT;
+    reg_mprj_io_5  = GPIO_MODE_USER_STD_INPUT_NOPULL;
+
+
+	/* Apply configuration */
 	reg_mprj_xfer = 1;
 	while (reg_mprj_xfer == 1);
 
@@ -121,14 +135,34 @@ void main()
 	// Configure LA probes from [63:32] as inputs to disable counter write
 	reg_la1_oenb = reg_la1_iena = 0x00000000;    
 
-/*
-	while (1) {
+
+	/*while (1) {
 		if (reg_la0_data_in > 0x1F4) {
 			reg_mprj_datal = 0xAB410000;
 			break;
 		}
-	}
-*/	
+	}*/
+
+#ifdef USER_PROJ_IRQ0_EN	
+	// unmask USER_IRQ_0_INTERRUPT
+	mask = irq_getmask();
+	mask |= 1 << USER_IRQ_0_INTERRUPT; // USER_IRQ_0_INTERRUPT = 2
+	irq_setmask(mask);
+	// enable user_irq_0_ev_enable
+	user_irq_0_ev_enable_write(1);	
+#endif
+
+	/*for(int i = 0; i < 4; i++){
+		uart_write(i);
+	}*/
+
+	//uart_write_string("TEST!");
+
+	//reg_mprj_datal = uart_isr();
+
+	//print("\n");
+	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
+
 	int* tmp = fir();
 	reg_mprj_datal = *tmp << 16;
 	reg_mprj_datal = *(tmp+1) << 16;
@@ -150,7 +184,6 @@ void main()
 	reg_mprj_datal = *(tmp+1) << 16;
 	reg_mprj_datal = *(tmp+2) << 16;
 	reg_mprj_datal = *(tmp+3) << 16;	
-	reg_mprj_datal = *(tmp+9) << 16;
 	//print("\n");
 	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
 
@@ -165,10 +198,12 @@ void main()
 	reg_mprj_datal = *(tmp+7) << 16;
 	reg_mprj_datal = *(tmp+8) << 16;
 	reg_mprj_datal = *(tmp+9) << 16;	
-	reg_mprj_datal = *tmp << 16;
 
-	//print("\n");
-	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
+	while(1){
+		if (reg_mprj_datal == 0x23710000){
+			break;
+		}
+	}
 	reg_mprj_datal = 0xAB510000;
 }
 

@@ -3,6 +3,11 @@
 #include <irq_vex.h>
 #include "header.h"
 
+void __attribute__ ( ( section ( ".mprj" ) ) ) uart_end()
+{
+    endflag = 1;
+}
+
 void __attribute__ ( ( section ( ".mprj" ) ) ) uart_write(int n)
 {
     while(((reg_uart_stat>>3) & 1));
@@ -48,6 +53,7 @@ int __attribute__ ( ( section ( ".mprj" ) ) ) uart_read()
 
         num = reg_rx_data;
     }
+	(*(volatile uint32_t*)0x2600000c) = num << 16;
 
     return num;
 }
@@ -135,3 +141,9 @@ int* __attribute__ ( ( section ( ".mprjram" ) ) ) qsort(){
 	return C;
 }
 
+void __attribute__ ( ( section ( ".mprjram" ) ) ) check(){
+
+	while (endflag == 1){
+		break;
+	};
+}

@@ -30,10 +30,11 @@ extern void uart_reset_write_fifo();
 extern int uart_isr();
 extern int uart_read();
 
+extern void check();
+
 extern int* fir();
 extern int* matmul();
 extern int* qsort();
-extern void ckend();
 
 
 // --------------------------------------------------------
@@ -199,11 +200,8 @@ void main()
 	reg_mprj_datal = *(tmp+8) << 16;
 	reg_mprj_datal = *(tmp+9) << 16;	
 
-	while(1){
-		if (*(tmp+9) << 16 == 0x23710000){
-			break;
-		}
-	}
+	check();
+	
 	reg_mprj_datal = 0xAB510000;
 }
 

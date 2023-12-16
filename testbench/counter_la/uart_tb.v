@@ -179,8 +179,6 @@ module uart_tb;
 	//test FIR
 	initial begin
 
-		wait(checkbits == 16'hAB40);
-		$display("LA Test 1 started");
 		wait(checkbits == 16'h0000);
 		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 		wait(checkbits == 16'hFFF6);
@@ -203,7 +201,6 @@ module uart_tb;
 		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
 		wait(checkbits == 16'h044A);
 		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
-		
 		
 		$display("================");
 		$display("[Passed]FIR passed!");
@@ -246,20 +243,27 @@ module uart_tb;
 	initial begin
 
 		wait(checkbits == 16'hAB40);
+		$display("LA Test 1 started");
+		
 		$display("***********");
-		$display("*uart start*");
+		$display("*[UART]uart1 start*");
 		$display("***********");
 		send_data_1;
 		#10000;
 
-		wait(checkbits == 16'h0393);
+		wait(checkbits == 16'h009E);
+		$display("***********");
+		$display("*[UART]uart2 start*");
+		$display("***********");
 		send_data_2;
 		#10000;
+		wait(checkbits == 16'h003D);
 		$display("***********");
-		$display("*[Passed]uart pass*");
+		$display("*[UART]uart3(end character) start*");
 		$display("***********");
-		
+		send_data_end;
 		wait(checkbits == 16'hAB51);
+		$display("*[UART]uart3(end character) receive*");
 		$display("[Passed]uart and function are passed");
 		$finish;		
 	end
@@ -285,6 +289,18 @@ module uart_tb;
 		wait(!tx_busy);
 		tx_start = 0;
 		$display("tx complete 2");
+		
+	end endtask
+
+	task send_data_end;begin
+		@(posedge clock);
+		tx_start = 1;
+		tx_data = 8'h0a;
+		
+		#50;
+		wait(!tx_busy);
+		tx_start = 0;
+		$display("End Character (0x0A)");
 		
 	end endtask
 

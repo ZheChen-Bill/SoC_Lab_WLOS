@@ -198,7 +198,7 @@ counter:
 isr:
 .LFB321:
 	.file 5 "../../firmware/isr.c"
-	.loc 5 24 1
+	.loc 5 26 1
 	.cfi_startproc
 	addi	sp,sp,-32
 	.cfi_def_cfa_offset 32
@@ -210,34 +210,43 @@ isr:
 	.cfi_offset 9, -12
 	addi	s0,sp,32
 	.cfi_def_cfa 8, 0
-	.loc 5 32 21
+	.loc 5 34 21
 	call	irq_pending
 	mv	s1,a0
-	.loc 5 32 37
+	.loc 5 34 37
 	call	irq_getmask
 	mv	a5,a0
-	.loc 5 32 14
+	.loc 5 34 14
 	and	a5,s1,a5
 	sw	a5,-20(s0)
-	.loc 5 35 15
+	.loc 5 37 15
 	lw	a5,-20(s0)
 	andi	a5,a5,4
-	.loc 5 35 8
-	beq	a5,zero,.L12
-	.loc 5 36 9
+	.loc 5 37 8
+	beq	a5,zero,.L13
+	.loc 5 38 9
 	li	a0,1
 	call	user_irq_0_ev_pending_write
-	.loc 5 37 15
+	.loc 5 39 15
 	call	uart_read
 	sw	a0,-24(s0)
-	.loc 5 38 9
+	.loc 5 40 11
+	lw	a4,-24(s0)
+	li	a5,10
+	bne	a4,a5,.L11
+	.loc 5 41 13
+	call	uart_end
+	.loc 5 49 5
+	j	.L13
+.L11:
+	.loc 5 44 13
 	lw	a0,-24(s0)
 	call	uart_write
-	.loc 5 43 5
+	.loc 5 49 5
 	nop
-.L12:
+.L13:
 	nop
-	.loc 5 45 1
+	.loc 5 51 1
 	lw	ra,28(sp)
 	.cfi_restore 1
 	lw	s0,24(sp)
@@ -255,7 +264,7 @@ isr:
 	.file 6 "/opt/riscv/lib/gcc/riscv32-unknown-elf/12.1.0/include/stdint-gcc.h"
 	.section	.debug_info,"",@progbits
 .Ldebug_info0:
-	.4byte	0x19f
+	.4byte	0x1ad
 	.2byte	0x5
 	.byte	0x1
 	.byte	0x4
@@ -317,49 +326,57 @@ isr:
 	.byte	0xb
 	.4byte	.LASF24
 	.byte	0x5
-	.byte	0x14
+	.byte	0x16
 	.byte	0xa
 	.4byte	0x50
 	.byte	0x5
 	.byte	0x3
 	.4byte	counter
-	.byte	0x3
+	.byte	0x4
 	.4byte	.LASF11
 	.byte	0xd
 	.4byte	0x6a
 	.4byte	0x9a
-	.byte	0x4
+	.byte	0x2
 	.byte	0
-	.byte	0x3
+	.byte	0xc
+	.4byte	.LASF25
+	.byte	0x5
+	.byte	0xf
+	.byte	0xd
+	.4byte	0xa8
+	.byte	0x2
+	.byte	0
+	.byte	0x4
 	.4byte	.LASF12
 	.byte	0xa
 	.4byte	0x6a
-	.4byte	0xaa
-	.byte	0x4
+	.4byte	0xb8
+	.byte	0x2
 	.byte	0
-	.byte	0xc
+	.byte	0xd
 	.string	"isr"
 	.byte	0x5
-	.byte	0x17
+	.byte	0x19
 	.byte	0x6
 	.4byte	.LFB321
 	.4byte	.LFE321-.LFB321
 	.byte	0x1
 	.byte	0x9c
-	.4byte	0xdf
-	.byte	0x2
+	.4byte	0xed
+	.byte	0x3
 	.4byte	.LASF13
 	.byte	0x5
-	.byte	0x20
+	.byte	0x22
 	.byte	0xe
 	.4byte	0x50
 	.byte	0x2
 	.byte	0x91
 	.byte	0x6c
-	.byte	0xd
+	.byte	0xe
 	.string	"buf"
 	.byte	0x5
-	.byte	0x21
+	.byte	0x23
 	.byte	0x9
 	.4byte	0x6a
 	.byte	0x2
@@ -374,8 +391,8 @@ isr:
 	.4byte	.LFE320-.LFB320
 	.byte	0x1
 	.byte	0x9c
-	.4byte	0x107
-	.byte	0x2
+	.4byte	0x115
+	.byte	0x3
 	.4byte	.LASF14
 	.byte	0x4
 	.byte	0x24
@@ -393,8 +410,8 @@ isr:
 	.4byte	.LFE318-.LFB318
 	.byte	0x1
 	.byte	0x9c
-	.4byte	0x12f
-	.byte	0x2
+	.4byte	0x13d
+	.byte	0x3
 	.4byte	.LASF17
 	.byte	0x4
 	.byte	0x18
@@ -404,7 +421,7 @@ isr:
 	.byte	0x91
 	.byte	0x6c
 	.byte	0
-	.byte	0xe
+	.byte	0xf
 	.4byte	.LASF18
 	.byte	0x3
 	.2byte	0x30a
@@ -413,8 +430,8 @@ isr:
 	.4byte	.LFE203-.LFB203
 	.byte	0x1
 	.byte	0x9c
-	.4byte	0x155
-	.byte	0xf
+	.4byte	0x163
+	.byte	0x10
 	.string	"v"
 	.byte	0x3
 	.2byte	0x30a
@@ -424,7 +441,7 @@ isr:
 	.byte	0x91
 	.byte	0x6c
 	.byte	0
-	.byte	0x10
+	.byte	0x11
 	.4byte	.LASF19
 	.byte	0x2
 	.byte	0x20
@@ -433,7 +450,7 @@ isr:
 	.4byte	.LFE23-.LFB23
 	.byte	0x1
 	.byte	0x9c
-	.4byte	0x182
+	.4byte	0x190
 	.byte	0x6
 	.string	"v"
 	.byte	0x33
@@ -478,6 +495,11 @@ isr:
 	.byte	0
 	.byte	0
 	.byte	0x2
+	.byte	0x18
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0x3
 	.byte	0x34
 	.byte	0
 	.byte	0x3
@@ -494,7 +516,7 @@ isr:
 	.byte	0x18
 	.byte	0
 	.byte	0
-	.byte	0x3
+	.byte	0x4
 	.byte	0x2e
 	.byte	0x1
 	.byte	0x3f
@@ -515,11 +537,6 @@ isr:
 	.byte	0x19
 	.byte	0x1
 	.byte	0x13
-	.byte	0
-	.byte	0
-	.byte	0x4
-	.byte	0x18
-	.byte	0
 	.byte	0
 	.byte	0
 	.byte	0x5
@@ -665,6 +682,25 @@ isr:
 	.byte	0x3f
 	.byte	0x19
 	.byte	0x3
+	.byte	0xe
+	.byte	0x3a
+	.byte	0xb
+	.byte	0x3b
+	.byte	0xb
+	.byte	0x39
+	.byte	0xb
+	.byte	0x3c
+	.byte	0x19
+	.byte	0x1
+	.byte	0x13
+	.byte	0
+	.byte	0
+	.byte	0xd
+	.byte	0x2e
+	.byte	0x1
+	.byte	0x3f
+	.byte	0x19
+	.byte	0x3
 	.byte	0x8
 	.byte	0x3a
 	.byte	0xb
@@ -686,7 +722,7 @@ isr:
 	.byte	0x13
 	.byte	0
 	.byte	0
-	.byte	0xd
+	.byte	0xe
 	.byte	0x34
 	.byte	0
 	.byte	0x3
@@ -703,7 +739,7 @@ isr:
 	.byte	0x18
 	.byte	0
 	.byte	0
-	.byte	0xe
+	.byte	0xf
 	.byte	0x2e
 	.byte	0x1
 	.byte	0x3
@@ -728,7 +764,7 @@ isr:
 	.byte	0x13
 	.byte	0
 	.byte	0
-	.byte	0xf
+	.byte	0x10
 	.byte	0x5
 	.byte	0
 	.byte	0x3
@@ -745,7 +781,7 @@ isr:
 	.byte	0x18
 	.byte	0
 	.byte	0
-	.byte	0x10
+	.byte	0x11
 	.byte	0x2e
 	.byte	0x1
 	.byte	0x3
@@ -800,6 +836,8 @@ isr:
 	.string	"counter"
 .LASF6:
 	.string	"unsigned char"
+.LASF25:
+	.string	"uart_end"
 .LASF8:
 	.string	"long unsigned int"
 .LASF7:

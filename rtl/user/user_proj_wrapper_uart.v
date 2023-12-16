@@ -78,6 +78,35 @@ module user_project_wrapper #(
     // User maskable interrupt signals
     output [2:0] user_irq
 );
+    //user memory
+    wire decode_to_mem;
+    wire wbs_ack_o_mem;
+    wire [31:0] wbs_dat_o_mem;
+    wire [37:0] io_out_mem;
+    wire [37:0] io_oeb_mem;
+    wire [2:0] user_irq_mem;
+
+    //uart
+    wire decode_to_uart;
+    wire wbs_ack_o_uart;
+    wire [31:0] wbs_dat_o_uart;
+    wire [37:0] io_out_uart;
+    wire [37:0] io_oeb_uart;
+    wire [2:0] user_irq_uart;
+
+    
+    assign decode_to_mem = (wbs_adr_i[31:24] == 8'h38) ? 1 : 0;
+    //assign decode_to_uart = (wbs_adr_i[31:24] == 8'h10) ? 1 : 0;
+
+    assign wbs_ack_o = decode_to_mem ? wbs_ack_o_mem : wbs_ack_o_uart;
+    assign wbs_dat_o = decode_to_mem ? wbs_dat_o_mem : wbs_dat_o_uart;
+    assign io_out = decode_to_mem ? io_out_mem : io_out_uart;
+    assign io_oeb = decode_to_mem ? io_oeb_mem : io_oeb_uart;
+
+    assign user_irq = user_irq_uart;
+    
+
+
 
 /*--------------------------------------*/
 /* User project is instantiated  here   */
@@ -239,13 +268,16 @@ uart uart (
     .wbs_ack_o(wbs_ack_o_uart),
     .wbs_dat_o(wbs_dat_o_uart),
 
+
     // IO ports
-    .io_in  (io_in      ),
-    .io_out (io_out     ),
-    .io_oeb (io_oeb     ),
+    .io_in  (io_in),
+    //.io_out (io_out),
+    //.io_oeb (io_oeb),
+    .io_out (io_out_uart),
+    .io_oeb (io_oeb_uart),
 
     // irq
-    .user_irq (user_irq)
+    .user_irq (user_irq_uart)
 );
 
 endmodule	// user_project_wrapper
